@@ -162,7 +162,9 @@ def get_system_load_remote(host, port, user):
     """
     Gets the result from ``get_system_load_local`` of a remote machine.
     """
-    proc = subprocess.Popen(["ssh", "%s@%s" % (user, host), "-p", port, "prt", "get_load"], stdout=subprocess.PIPE)
+    env = dict(os.environ)
+    env['LD_LIBRARY_PTH'] = '/usr/lib/x86_64-linux-gnu/'
+    proc = subprocess.Popen(["ssh", "%s@%s" % (user, host), "-p", port, "prt", "get_load"], stdout=subprocess.PIPE, env=env)
     proc.wait()
     return [float(i) for i in proc.stdout.read().strip().split()]
 
@@ -413,13 +415,16 @@ def transcode_remote():
     # TODO: Remap file-path to PMS URLs
     #
 
+    env = dict(os.environ)
+    env['LD_LIBRARY_PTH'] = '/usr/lib/x86_64-linux-gnu/'
+
     args = ["ssh", "-tt", "-R", "32400:127.0.0.1:32400", "%s@%s" % (host["user"], hostname), "-p", host["port"]] + [command]
 
 
     log.info("Launching transcode_remote with args %s\n" % args)
 
     # Spawn the process
-    proc = subprocess.Popen(args)
+    proc = subprocess.Popen(args, env=env)
     proc.wait()
 
     log.info("Transcode stopped on host '%s'" % hostname)
