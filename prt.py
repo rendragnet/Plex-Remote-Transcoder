@@ -457,8 +457,11 @@ def get_plex_sessions(auth_token=None):
     for node in dom.findall('.//Video'):
         session_id = et_get(node.find('.//TranscodeSession'), 'key')
         if session_id:
+            titlePath = et_get(node, 'grandparentTitle', '') + ' - ' + et_get(node, 'parentTitle', '') + ' - '
+            titlePath = (titlePath, '') [ titlePath==' -  - ' ]
             sessions[session_id] = {
-                'file': et_get(node.find('.//Media/Part'), 'file')
+                'name': et_get(node, 'librarySectionTitle') +  ', ' + titlePath + et_get(node, 'title', ''),
+                'user': et_get(node.find('.//User'), 'title')
         }
     return sessions
 
@@ -498,7 +501,7 @@ def get_sessions():
                 session_id = re_get(SESSION_RE, cmdline)
                 data = {
                     'proc': pinfo,
-                    'plex': plex_sessions.get(session_id, {}),
+                    'plex': plex_sessions.get('/transcode/sessions/' + session_id, {}),
                     'host': {}
                 }
 
@@ -606,7 +609,8 @@ def sessions():
     for i, (session_id, session) in enumerate(sessions.items()):
         print "Session %s/%s" % (i+1, len(sessions))
         print "  Host: %s" % session.get('host', {}).get('address')
-        print "  File: %s" % session.get('plex', {}).get('file')
+        print "  Name: %s" % session.get('plex', {}).get('name')
+        print "  User: %s" % session.get('plex', {}).get('user')
 
 
 def version():
